@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TruSpot – Real People, Real Places | Multi-City Local Discovery Platform</title>
+  <meta name="description" content="Discover verified places, authentic food spots, curated local guides, and community recommendations across Tanuku, Rajahmundry, Vijayawada, Hyderabad, and Bengaluru.">
+  <meta name="keywords" content="TruSpot, local discovery, Tanuku, Rajahmundry, Vijayawada, Hyderabad, Bengaluru, restaurants, hospitals, guides, reviews">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- TruSpot Modern Design System -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Tailwind CSS (with preflight disabled to protect existing design tokens) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      corePlugins: {
+        preflight: false
+      },
+      theme: {
+        extend: {
+          colors: {
+            brand: '#0D9488',
+            brandDark: '#0F766E'
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- TruSpot Official Brand Favicon & Manifest -->
+  <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+  <link rel="apple-touch-icon" href="assets/logo.jpg">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+  <!-- ========================================================================
+       STICKY HEADER & NAVIGATION
+       ======================================================================== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <!-- Brand Logo -->
+      <div class="brand-wrapper" data-route="home">
+        <div class="brand-logo">
+          <img src="assets/logo.jpg" alt="TruSpot Logo" class="brand-logo-img">
+          <div>
+            <span>TruSpot</span>
+            <span class="brand-tagline">Real People, Real Places</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- City Selector Pill -->
+      <div class="city-picker-box">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <select id="global-city-select" class="city-select" aria-label="Select City">
+          <option value="All Cities">All Cities</option>
+        </select>
+      </div>
+
+      <!-- Quick Nav Search -->
+      <div class="nav-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="nav-search-input" placeholder="Search spots, food, doctors..." aria-label="Search places">
+      </div>
+
+      <!-- Navigation Links -->
+      <nav>
+        <ul class="nav-links">
+          <li class="nav-item"><a href="#home" class="nav-btn active" data-route="home">Home</a></li>
+          <li class="nav-item"><a href="#explore" class="nav-btn" data-route="explore">Explore</a></li>
+          <li class="nav-item"><a href="#guides" class="nav-btn" data-route="guides">Local Guides</a></li>
+          <li class="nav-item"><a href="#ask-locals" class="nav-btn" data-route="ask-locals">Ask Locals</a></li>
+          <li class="nav-item">
+            <a href="#saved" class="nav-btn" data-route="saved">
+              Saved <span id="saved-count-badge" class="nav-badge" style="display: none;">0</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Auth Profile Container -->
+      <div id="auth-nav-container">
+        <!-- Rendered by auth.js -->
+      </div>
+
+      <!-- Mobile Drawer Toggle Button -->
+      <button class="drawer-toggle-btn" id="drawer-toggle-btn" onclick="App.toggleMobileDrawer(true)" aria-label="Open Mobile Drawer Menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MOBILE-FRIENDLY DRAWER NAVIGATION
+       ======================================================================== -->
+  <div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop" onclick="App.toggleMobileDrawer(false)"></div>
+  <aside class="mobile-drawer" id="mobile-drawer" aria-label="Mobile Navigation">
+    <div class="drawer-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="assets/logo.jpg" alt="TruSpot" style="width: 32px; height: 32px; border-radius: 8px;">
+        <div>
+          <div style="font-weight: 800; font-size: 1.05rem; color: #0F172A; line-height: 1.2;">TruSpot Guide</div>
+          <div style="font-size: 0.72rem; color: #64748B;">AP & Karnataka Directory</div>
+        </div>
+      </div>
+      <button type="button" class="drawer-close-btn" onclick="App.toggleMobileDrawer(false)" aria-label="Close Menu">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- Active City Selector in Drawer -->
+      <div class="drawer-city-section">
+        <label for="drawer-city-select">Select Active City</label>
+        <select id="drawer-city-select" class="drawer-city-select" onchange="App.handleHeroCityChange(this.value); App.toggleMobileDrawer(false)">
+          <option value="All Cities">All Cities (AP & Karnataka)</option>
+          <option value="Bengaluru">Bengaluru, Karnataka</option>
+          <option value="Hyderabad">Hyderabad, Telangana</option>
+          <option value="Vijayawada">Vijayawada, Andhra Pradesh</option>
+          <option value="Rajahmundry">Rajahmundry, Andhra Pradesh</option>
+          <option value="Tanuku">Tanuku, Andhra Pradesh</option>
+        </select>
+      </div>
+
+      <!-- Main Navigation Links -->
+      <div>
+        <label style="display: block; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748B; margin-bottom: 8px;">Quick Navigation</label>
+        <ul class="drawer-nav-list">
+          <li class="drawer-nav-item">
+            <a href="#home" onclick="App.toggleMobileDrawer(false)">
+              <span>🏠</span> Home Directory Cover
+            </a>
+          </li>
+          <li class="drawer-nav-item">
+            <a href="#explore" onclick="App.toggleMobileDrawer(false)">
+              <span>🧭</span> Explore Places & Map
+            </a>
+          </li>
+          <li class="drawer-nav-item">
+            <a href="#education" onclick="App.toggleMobileDrawer(false)">
+              <span>🎓</span> Education Portal
+            </a>
+          </li>
+          <li class="drawer-nav-item">
+            <a href="#essential" onclick="App.toggleMobileDrawer(false)">
+              <span>🚨</span> Essential Services Portal
+            </a>
+          </li>
+          <li class="drawer-nav-item">
+            <a href="#guides" onclick="App.toggleMobileDrawer(false)">
+              <span>🗺️</span> Curated Local Guides
+            </a>
+          </li>
+          <li class="drawer-nav-item">
+            <a href="#ask-locals" onclick="App.toggleMobileDrawer(false)">
+              <span>💬</span> Ask Locals Q&A Feed
+            </a>
+          </li>
+          <li class="drawer-nav-item">
+            <a href="#contributor-portal" onclick="Router.navigate('contributor-portal'); App.toggleMobileDrawer(false)">
+              <span>⭐</span> Contributor Portal
+            </a>
+          </li>
+          <li class="drawer-nav-item">
+            <a href="#saved" onclick="App.toggleMobileDrawer(false)">
+              <span>🔖</span> Saved Places
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 7 Sectors Direct Links -->
+      <div>
+        <label style="display: block; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748B; margin-bottom: 8px;">Browse 7 Sectors</label>
+        <ul class="drawer-nav-list">
+          <li class="drawer-nav-item">
+            <button type="button" onclick="App.selectCategoryShortcut('food-dining'); App.toggleMobileDrawer(false)">
+              <span>🍽️</span> Food & Dining <small style="margin-left: auto; color: #64748B;">12 subs</small>
+            </button>
+          </li>
+          <li class="drawer-nav-item">
+            <button type="button" onclick="App.selectCategoryShortcut('travel-stay'); App.toggleMobileDrawer(false)">
+              <span>🏨</span> Travel & Stay <small style="margin-left: auto; color: #64748B;">11 subs</small>
+            </button>
+          </li>
+          <li class="drawer-nav-item">
+            <button type="button" onclick="App.selectCategoryShortcut('healthcare'); App.toggleMobileDrawer(false)">
+              <span>🏥</span> Healthcare <small style="margin-left: auto; color: #64748B;">8 subs</small>
+            </button>
+          </li>
+          <li class="drawer-nav-item">
+            <button type="button" onclick="App.selectCategoryShortcut('shopping'); App.toggleMobileDrawer(false)">
+              <span>🛍️</span> Shopping <small style="margin-left: auto; color: #64748B;">10 subs</small>
+            </button>
+          </li>
+          <li class="drawer-nav-item">
+            <button type="button" onclick="App.selectCategoryShortcut('education'); App.toggleMobileDrawer(false)">
+              <span>🎓</span> Education <small style="margin-left: auto; color: #64748B;">7 subs</small>
+            </button>
+          </li>
+          <li class="drawer-nav-item">
+            <button type="button" onclick="App.selectCategoryShortcut('essential-services'); App.toggleMobileDrawer(false)">
+              <span>🚨</span> Essential Services <small style="margin-left: auto; color: #64748B;">11 subs</small>
+            </button>
+          </li>
+          <li class="drawer-nav-item">
+            <button type="button" onclick="App.selectCategoryShortcut('transport-automotive'); App.toggleMobileDrawer(false)">
+              <span>🚗</span> Transport & Auto <small style="margin-left: auto; color: #64748B;">11 subs</small>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Emergency Helpline Dialers -->
+      <div class="drawer-emergency-box">
+        <div class="drawer-emergency-title">
+          <span>🚨</span> 24/7 Emergency Dialers
+        </div>
+        <div class="drawer-emergency-grid">
+          <a href="tel:100" class="drawer-emergency-btn">Police 100</a>
+          <a href="tel:101" class="drawer-emergency-btn">Fire 101</a>
+          <a href="tel:108" class="drawer-emergency-btn">Ambulance 108</a>
+          <a href="tel:1091" class="drawer-emergency-btn">Women 1091</a>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       CATEGORY SHORTCUTS BAR
+       ======================================================================== -->
+  <section class="categories-bar-section">
+    <div class="container">
+      <div class="categories-bar-list" id="categories-bar-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       VIEW: HOME PAGE
+       ======================================================================== -->
+  <main id="view-home" class="app-view">
+    <!-- ======================================================================
+         DIRECTORY COVER PAGE: HERO LANDING PAGE (AP & KARNATAKA)
+         ====================================================================== -->
+    <section class="directory-cover-hero">
+      <div class="container directory-cover-hero-inner">
+        <div class="directory-badge-pill">
+          <span>✨</span> South India City Guide • 1,750+ Verified Places
+        </div>
+        <h1 class="directory-hero-title">
+          Explore Cities & Services <span>across AP & Karnataka</span>
+        </h1>
+        <p class="directory-hero-subtitle" id="directory-hero-subtitle">
+          Your verified directory covering <strong>Bengaluru, Hyderabad, Vijayawada, Rajahmundry, and Tanuku</strong> with 100% physically audited spots.
+        </p>
+
+        <!-- Unified Search Bar with Glassmorphism & Real-Time Filtering -->
+        <div class="unified-search-box">
+          <!-- City Selector Dropdown -->
+          <div class="unified-city-dropdown-wrap">
+            <svg class="unified-city-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <select id="hero-city-select" class="unified-city-select" aria-label="Select City" onchange="App.handleHeroCityChange(this.value)">
+              <option value="All Cities">All Cities (AP & Karnataka)</option>
+              <option value="Bengaluru">Bengaluru (Karnataka)</option>
+              <option value="Hyderabad">Hyderabad (Telangana)</option>
+              <option value="Vijayawada">Vijayawada (Andhra Pradesh)</option>
+              <option value="Rajahmundry">Rajahmundry (Andhra Pradesh)</option>
+              <option value="Tanuku">Tanuku (Andhra Pradesh)</option>
+            </select>
+          </div>
+
+          <!-- Unified Search Input -->
+          <div class="unified-search-input-wrap">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="hero-search-input" class="unified-search-input" placeholder="Search 1,750+ verified spots, sectors, or subcategories (e.g. Vegetarian, EV Charging, Schools)..." oninput="App.handleRealtimeSearchInput(this.value)" onkeydown="if(event.key==='Enter') App.executeHeroSearch()" autocomplete="off">
+          </div>
+
+          <!-- Search Button -->
+          <button type="button" class="unified-search-btn" onclick="App.executeHeroSearch()">Find Verified Spots</button>
+
+          <!-- Real-Time Search Tray Dropdown -->
+          <div class="realtime-search-tray" id="realtime-search-tray">
+            <!-- Populated via App.handleRealtimeSearchInput -->
+          </div>
+        </div>
+
+        <!-- Quick City Filter Pills -->
+        <div class="quick-city-pills-row">
+          <span style="font-size: 0.8rem; font-weight: 700; color: #94A3B8; margin-right: 4px;">Quick Switch:</span>
+          <button type="button" class="quick-city-pill-btn active" data-city="All Cities" onclick="App.handleHeroCityChange('All Cities')">All Cities</button>
+          <button type="button" class="quick-city-pill-btn" data-city="Bengaluru" onclick="App.handleHeroCityChange('Bengaluru')">Bengaluru</button>
+          <button type="button" class="quick-city-pill-btn" data-city="Hyderabad" onclick="App.handleHeroCityChange('Hyderabad')">Hyderabad</button>
+          <button type="button" class="quick-city-pill-btn" data-city="Vijayawada" onclick="App.handleHeroCityChange('Vijayawada')">Vijayawada</button>
+          <button type="button" class="quick-city-pill-btn" data-city="Rajahmundry" onclick="App.handleHeroCityChange('Rajahmundry')">Rajahmundry</button>
+          <button type="button" class="quick-city-pill-btn" data-city="Tanuku" onclick="App.handleHeroCityChange('Tanuku')">Tanuku</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         7 SECTOR COVER CARDS & SUBCATEGORY MENUS (REFERENCE IMAGE STYLING)
+         ====================================================================== -->
+    <section class="directory-sectors-section" id="directory-sectors-section">
+      <div class="container">
+        <div class="directory-section-header">
+          <div class="directory-section-title-wrap">
+            <h2>Verified Sectors & Subcategories</h2>
+            <p>Click any sector card or specific subcategory tag to view physical ground-truth listings in your selected city.</p>
+          </div>
+          <div class="badge" style="background: #F0FDFA; color: #0F766E; border: 1px solid #CCFBF1; font-size: 0.88rem; padding: 7px 16px; border-radius: 9999px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;" id="directory-active-city-badge">
+            <span class="pulse-dot green" style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
+            <span id="directory-badge-text">Showing All Cities (1,750 Verified Spots)</span>
+          </div>
+        </div>
+
+        <div class="directory-cards-grid" id="directory-cards-grid">
+          <!-- CARD 1: FOOD & DINING -->
+          <article class="sector-cover-card" id="sector-card-food-dining" data-sector="food-dining">
+            <div class="sector-cover-media">
+              <img src="https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fHJlc3RhdXJhbnR8ZW58MHx8MHx8fDA%3D" alt="Food & Dining Cover" loading="lazy">
+              <!-- Exact Verified Badge from Reference Image -->
+              <div class="cover-card-verified-badge">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span>✓ Verified</span>
+              </div>
+              <!-- Bookmark / Save Button from Reference Image -->
+              <button type="button" class="cover-card-bookmark-btn" onclick="App.toggleSectorBookmark('food-dining', 'Food & Dining', this)" title="Save Food & Dining">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </button>
+              <!-- Bottom Scrim Overlay -->
+              <div class="sector-cover-overlay">
+                <div class="sector-meta-bar">
+                  <h3 class="sector-card-title"><span>🍽️</span> Food & Dining</h3>
+                  <span class="sector-count-pill" id="sector-count-food-dining">350 Verified Spots</span>
+                </div>
+              </div>
+            </div>
+            <!-- Subcategory Menu Body -->
+            <div class="sector-subcat-menu">
+              <div>
+                <div class="subcat-menu-header" style="margin-bottom: 12px;">
+                  <span class="subcat-menu-heading">Subcategories</span>
+                  <span class="subcat-badge-counter">12 Sub-sectors</span>
+                </div>
+                <div class="subcat-chips-wrap">
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="restaurants" onclick="App.handleSubcategoryClick('food-dining', 'Restaurants')">Restaurants</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="cafes" onclick="App.handleSubcategoryClick('food-dining', 'Cafes')">Cafes</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="bakeries" onclick="App.handleSubcategoryClick('food-dining', 'Bakeries')">Bakeries</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="fast-food" onclick="App.handleSubcategoryClick('food-dining', 'Fast Food')">Fast Food</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="street-food" onclick="App.handleSubcategoryClick('food-dining', 'Street Food')">Street Food</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="vegetarian" onclick="App.handleSubcategoryClick('food-dining', 'Vegetarian')">Vegetarian</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="vegan" onclick="App.handleSubcategoryClick('food-dining', 'Vegan')">Vegan</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="desserts" onclick="App.handleSubcategoryClick('food-dining', 'Desserts')">Desserts</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="ice-cream" onclick="App.handleSubcategoryClick('food-dining', 'Ice Cream')">Ice Cream</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="family-dining" onclick="App.handleSubcategoryClick('food-dining', 'Family Dining')">Family Dining</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="fine-dining" onclick="App.handleSubcategoryClick('food-dining', 'Fine Dining')">Fine Dining</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="food-dining" data-sub="food-delivery" onclick="App.handleSubcategoryClick('food-dining', 'Food Delivery')">Food Delivery</button>
+                </div>
+              </div>
+              <div class="sector-card-footer">
+                <button type="button" class="sector-explore-link" onclick="App.navigateToSector('food-dining')">
+                  Explore Food & Dining <span>&rarr;</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- CARD 2: TRAVEL & STAY -->
+          <article class="sector-cover-card" id="sector-card-travel-stay" data-sector="travel-stay">
+            <div class="sector-cover-media">
+              <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80" alt="Travel & Stay Cover" loading="lazy">
+              <!-- Exact Verified Badge from Reference Image -->
+              <div class="cover-card-verified-badge">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span>✓ Verified</span>
+              </div>
+              <!-- Bookmark / Save Button -->
+              <button type="button" class="cover-card-bookmark-btn" onclick="App.toggleSectorBookmark('travel-stay', 'Travel & Stay', this)" title="Save Travel & Stay">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </button>
+              <!-- Bottom Scrim Overlay -->
+              <div class="sector-cover-overlay">
+                <div class="sector-meta-bar">
+                  <h3 class="sector-card-title"><span>🏨</span> Travel & Stay</h3>
+                  <span class="sector-count-pill" id="sector-count-travel-stay">275 Verified Spots</span>
+                </div>
+              </div>
+            </div>
+            <!-- Subcategory Menu Body -->
+            <div class="sector-subcat-menu">
+              <div>
+                <div class="subcat-menu-header" style="margin-bottom: 12px;">
+                  <span class="subcat-menu-heading">Subcategories</span>
+                  <span class="subcat-badge-counter">11 Sub-sectors</span>
+                </div>
+                <div class="subcat-chips-wrap">
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="hotels" onclick="App.handleSubcategoryClick('travel-stay', 'Hotels')">Hotels</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="resorts" onclick="App.handleSubcategoryClick('travel-stay', 'Resorts')">Resorts</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="lodges" onclick="App.handleSubcategoryClick('travel-stay', 'Lodges')">Lodges</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="homestays" onclick="App.handleSubcategoryClick('travel-stay', 'Homestays')">Homestays</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="tourist-places" onclick="App.handleSubcategoryClick('travel-stay', 'Tourist Places')">Tourist Places</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="attractions" onclick="App.handleSubcategoryClick('travel-stay', 'Attractions')">Attractions</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="parks" onclick="App.handleSubcategoryClick('travel-stay', 'Parks')">Parks</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="temples" onclick="App.handleSubcategoryClick('travel-stay', 'Temples')">Temples</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="museums" onclick="App.handleSubcategoryClick('travel-stay', 'Museums')">Museums</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="weekend-getaways" onclick="App.handleSubcategoryClick('travel-stay', 'Weekend Getaways')">Weekend Getaways</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="travel-stay" data-sub="travel-agencies" onclick="App.handleSubcategoryClick('travel-stay', 'Travel Agencies')">Travel Agencies</button>
+                </div>
+              </div>
+              <div class="sector-card-footer">
+                <button type="button" class="sector-explore-link" onclick="App.navigateToSector('travel-stay')">
+                  Explore Travel & Stay <span>&rarr;</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- CARD 3: HEALTHCARE -->
+          <article class="sector-cover-card" id="sector-card-healthcare" data-sector="healthcare">
+            <div class="sector-cover-media">
+              <img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=800&q=80" alt="Healthcare Cover" loading="lazy">
+              <!-- Exact Verified Badge from Reference Image -->
+              <div class="cover-card-verified-badge">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span>✓ Verified</span>
+              </div>
+              <!-- Bookmark / Save Button -->
+              <button type="button" class="cover-card-bookmark-btn" onclick="App.toggleSectorBookmark('healthcare', 'Healthcare', this)" title="Save Healthcare">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </button>
+              <!-- Bottom Scrim Overlay -->
+              <div class="sector-cover-overlay">
+                <div class="sector-meta-bar">
+                  <h3 class="sector-card-title"><span>🏥</span> Healthcare</h3>
+                  <span class="sector-count-pill" id="sector-count-healthcare">200 Verified Spots</span>
+                </div>
+              </div>
+            </div>
+            <!-- Subcategory Menu Body -->
+            <div class="sector-subcat-menu">
+              <div>
+                <div class="subcat-menu-header" style="margin-bottom: 12px;">
+                  <span class="subcat-menu-heading">Subcategories</span>
+                  <span class="subcat-badge-counter">8 Sub-sectors</span>
+                </div>
+                <div class="subcat-chips-wrap">
+                  <button type="button" class="subcat-pill-chip" data-cat="healthcare" data-sub="hospitals" onclick="App.handleSubcategoryClick('healthcare', 'Hospitals')">Hospitals</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="healthcare" data-sub="clinics" onclick="App.handleSubcategoryClick('healthcare', 'Clinics')">Clinics</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="healthcare" data-sub="dentists" onclick="App.handleSubcategoryClick('healthcare', 'Dentists')">Dentists</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="healthcare" data-sub="pharmacies" onclick="App.handleSubcategoryClick('healthcare', 'Pharmacies')">Pharmacies</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="healthcare" data-sub="diagnostic-centers" onclick="App.handleSubcategoryClick('healthcare', 'Diagnostic Centers')">Diagnostic Centers</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="healthcare" data-sub="eye-care" onclick="App.handleSubcategoryClick('healthcare', 'Eye Care')">Eye Care</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="healthcare" data-sub="physiotherapy" onclick="App.handleSubcategoryClick('healthcare', 'Physiotherapy')">Physiotherapy</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="healthcare" data-sub="medical-specialists" onclick="App.handleSubcategoryClick('healthcare', 'Medical Specialists')">Medical Specialists</button>
+                </div>
+              </div>
+              <div class="sector-card-footer">
+                <button type="button" class="sector-explore-link" onclick="App.navigateToSector('healthcare')">
+                  Explore Healthcare <span>&rarr;</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- CARD 4: SHOPPING -->
+          <article class="sector-cover-card" id="sector-card-shopping" data-sector="shopping">
+            <div class="sector-cover-media">
+              <img src="https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=800&q=80" alt="Shopping Cover" loading="lazy">
+              <!-- Exact Verified Badge from Reference Image -->
+              <div class="cover-card-verified-badge">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span>✓ Verified</span>
+              </div>
+              <!-- Bookmark / Save Button -->
+              <button type="button" class="cover-card-bookmark-btn" onclick="App.toggleSectorBookmark('shopping', 'Shopping', this)" title="Save Shopping">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </button>
+              <!-- Bottom Scrim Overlay -->
+              <div class="sector-cover-overlay">
+                <div class="sector-meta-bar">
+                  <h3 class="sector-card-title"><span>🛍️</span> Shopping</h3>
+                  <span class="sector-count-pill" id="sector-count-shopping">250 Verified Spots</span>
+                </div>
+              </div>
+            </div>
+            <!-- Subcategory Menu Body -->
+            <div class="sector-subcat-menu">
+              <div>
+                <div class="subcat-menu-header" style="margin-bottom: 12px;">
+                  <span class="subcat-menu-heading">Subcategories</span>
+                  <span class="subcat-badge-counter">10 Sub-sectors</span>
+                </div>
+                <div class="subcat-chips-wrap">
+                  <button type="button" class="subcat-pill-chip" data-cat="shopping" data-sub="shopping-malls" onclick="App.handleSubcategoryClick('shopping', 'Shopping Malls')">Shopping Malls</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="shopping" data-sub="clothing" onclick="App.handleSubcategoryClick('shopping', 'Clothing')">Clothing</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="shopping" data-sub="electronics" onclick="App.handleSubcategoryClick('shopping', 'Electronics')">Electronics</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="shopping" data-sub="supermarkets" onclick="App.handleSubcategoryClick('shopping', 'Supermarkets')">Supermarkets</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="shopping" data-sub="grocery" onclick="App.handleSubcategoryClick('shopping', 'Grocery')">Grocery</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="shopping" data-sub="jewellery" onclick="App.handleSubcategoryClick('shopping', 'Jewellery')">Jewellery</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="shopping" data-sub="furniture" onclick="App.handleSubcategoryClick('shopping', 'Furniture')">Furniture</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="shopping" data-sub="local-markets" onclick="App.handleSubcategoryClick('shopping', 'Local Markets')">Local Markets</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="shopping" data-sub="book-stores" onclick="App.handleSubcategoryClick('shopping', 'Book Stores')">Book Stores</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="shopping" data-sub="gift-shops" onclick="App.handleSubcategoryClick('shopping', 'Gift Shops')">Gift Shops</button>
+                </div>
+              </div>
+              <div class="sector-card-footer">
+                <button type="button" class="sector-explore-link" onclick="App.navigateToSector('shopping')">
+                  Explore Shopping <span>&rarr;</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- CARD 5: TRANSPORT & AUTOMOTIVE -->
+          <article class="sector-cover-card" id="sector-card-transport-automotive" data-sector="transport-automotive">
+            <div class="sector-cover-media">
+              <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=80" alt="Transport & Automotive Cover" loading="lazy">
+              <!-- Exact Verified Badge from Reference Image -->
+              <div class="cover-card-verified-badge">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span>✓ Verified</span>
+              </div>
+              <!-- Bookmark / Save Button -->
+              <button type="button" class="cover-card-bookmark-btn" onclick="App.toggleSectorBookmark('transport-automotive', 'Transport & Automotive', this)" title="Save Transport & Automotive">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </button>
+              <!-- Bottom Scrim Overlay -->
+              <div class="sector-cover-overlay">
+                <div class="sector-meta-bar">
+                  <h3 class="sector-card-title"><span>🚗</span> Transport & Automotive</h3>
+                  <span class="sector-count-pill" id="sector-count-transport-automotive">275 Verified Spots</span>
+                </div>
+              </div>
+            </div>
+            <!-- Subcategory Menu Body -->
+            <div class="sector-subcat-menu">
+              <div>
+                <div class="subcat-menu-header" style="margin-bottom: 12px;">
+                  <span class="subcat-menu-heading">Subcategories</span>
+                  <span class="subcat-badge-counter">11 Sub-sectors</span>
+                </div>
+                <div class="subcat-chips-wrap">
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="petrol-pumps" onclick="App.handleSubcategoryClick('transport-automotive', 'Petrol Pumps')">Petrol Pumps</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="ev-charging" onclick="App.handleSubcategoryClick('transport-automotive', 'EV Charging')">EV Charging</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="car-service" onclick="App.handleSubcategoryClick('transport-automotive', 'Car Service')">Car Service</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="bike-service" onclick="App.handleSubcategoryClick('transport-automotive', 'Bike Service')">Bike Service</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="car-wash" onclick="App.handleSubcategoryClick('transport-automotive', 'Car Wash')">Car Wash</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="tyre-shops" onclick="App.handleSubcategoryClick('transport-automotive', 'Tyre Shops')">Tyre Shops</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="car-dealers" onclick="App.handleSubcategoryClick('transport-automotive', 'Car Dealers')">Car Dealers</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="bike-dealers" onclick="App.handleSubcategoryClick('transport-automotive', 'Bike Dealers')">Bike Dealers</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="driving-schools" onclick="App.handleSubcategoryClick('transport-automotive', 'Driving Schools')">Driving Schools</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="rental-services" onclick="App.handleSubcategoryClick('transport-automotive', 'Rental Services')">Rental Services</button>
+                  <button type="button" class="subcat-pill-chip" data-cat="transport-automotive" data-sub="parking" onclick="App.handleSubcategoryClick('transport-automotive', 'Parking')">Parking</button>
+                </div>
+              </div>
+              <div class="sector-card-footer">
+                <button type="button" class="sector-explore-link" onclick="App.navigateToSector('transport-automotive')">
+                  Explore Transport & Auto <span>&rarr;</span>
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trending Places Section -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <h2>Trending Near You</h2>
+            <p class="section-subtitle">Highest rated verified spots handpicked by local explorers.</p>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="Router.navigate('explore')">Explore All Places &rarr;</button>
+        </div>
+        <div class="places-grid" id="home-trending-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Curated Guides Showcase -->
+    <section class="section section-alt">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <h2>Top Curated Local Guides</h2>
+            <p class="section-subtitle">Authentic itineraries created by verified city insiders.</p>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="Router.navigate('guides')">All Guides &rarr;</button>
+        </div>
+        <div class="guides-grid" id="home-guides-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Local Recommendations -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <h2>Local Recommendations</h2>
+            <p class="section-subtitle">Most reviewed community favorites and hidden gems.</p>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="Router.navigate('explore')">View More &rarr;</button>
+        </div>
+        <div class="places-grid" id="home-recommendations-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Ask Locals Community Section -->
+    <section class="section section-alt">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <h2>Ask Locals Community Feed</h2>
+            <p class="section-subtitle">Real questions answered by people who actually live there.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="App.openAskModal()">Ask a Question</button>
+        </div>
+        <div class="qa-grid" id="home-questions-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       VIEW: EXPLORE PAGE & SEARCH ENGINE
+       ======================================================================== -->
+  <main id="view-explore" class="app-view" style="display: none;">
+    <div class="container">
+      <!-- Natural Language Query Parsed Indicator -->
+      <div id="parsed-query-bar" style="margin-top: 20px; display: none;"></div>
+
+      <div class="explore-container">
+        <!-- Filter Sidebar -->
+        <aside class="filter-sidebar" id="filter-sidebar">
+          <div class="filter-sidebar-header">
+            <div class="filter-sidebar-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filter Places
+            </div>
+            <button type="button" class="filter-reset-btn" id="reset-filters-btn">Reset All</button>
+          </div>
+
+          <!-- City Filter -->
+          <div class="filter-group">
+            <label class="filter-label" for="filter-city">City</label>
+            <select id="filter-city" class="filter-select">
+              <option value="All Cities">All Cities</option>
+            </select>
+          </div>
+
+          <!-- Category Filter -->
+          <div class="filter-group">
+            <label class="filter-label" for="filter-category">Category</label>
+            <select id="filter-category" class="filter-select">
+              <option value="all">All Categories</option>
+            </select>
+          </div>
+
+          <!-- Subcategory Filter -->
+          <div class="filter-group">
+            <label class="filter-label" for="filter-subcategory">Subcategory</label>
+            <select id="filter-subcategory" class="filter-select" disabled>
+              <option value="all">All Subcategories</option>
+            </select>
+          </div>
+
+          <!-- Price Range Filter -->
+          <div class="filter-group">
+            <label class="filter-label">Price Range</label>
+            <div class="price-btn-group">
+              <button type="button" class="price-btn active" data-price="all">All</button>
+              <button type="button" class="price-btn" data-price="₹">₹</button>
+              <button type="button" class="price-btn" data-price="₹₹">₹₹</button>
+              <button type="button" class="price-btn" data-price="₹₹₹">₹₹₹</button>
+            </div>
+          </div>
+
+          <!-- Minimum Rating Filter -->
+          <div class="filter-group">
+            <label class="filter-label">Minimum Rating</label>
+            <div class="rating-btn-group">
+              <div class="rating-filter-pill" data-rating="4.5">★ 4.5+ Exceptional</div>
+              <div class="rating-filter-pill" data-rating="4.0">★ 4.0+ Very Good</div>
+              <div class="rating-filter-pill" data-rating="3.0">★ 3.0+ Good</div>
+            </div>
+          </div>
+
+          <!-- Status Toggles -->
+          <div class="filter-group">
+            <div class="toggle-switch-row">
+              <label class="toggle-switch-label" for="filter-open-now">Open Now</label>
+              <label class="switch">
+                <input type="checkbox" id="filter-open-now">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-switch-row">
+              <label class="toggle-switch-label" for="filter-verified">Verified Only</label>
+              <label class="switch">
+                <input type="checkbox" id="filter-verified">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-switch-row">
+              <label class="toggle-switch-label" for="filter-demo">Demo Data</label>
+              <label class="switch">
+                <input type="checkbox" id="filter-demo">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Dynamic Category Specific Filters -->
+          <div class="filter-group" id="dynamic-amenities-group" style="display: none;">
+            <label class="filter-label" id="dynamic-amenities-label">Specific Amenities</label>
+            <div class="amenity-chip-grid" id="dynamic-amenities-container"></div>
+          </div>
+
+          <!-- Sort Options -->
+          <div class="filter-group">
+            <label class="filter-label" for="filter-sort-by">Sort Results By</label>
+            <select id="filter-sort-by" class="filter-select">
+              <option value="relevance">Most Relevant</option>
+              <option value="rating_desc">Highest Rated</option>
+              <option value="reviews_desc">Most Reviewed</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="newest">Newest Added</option>
+            </select>
+          </div>
+        </aside>
+
+        <!-- Main Content (Places Grid + Leaflet Map) -->
+        <div class="explore-main">
+          <!-- Control Bar -->
+          <div class="explore-controls-bar">
+            <div class="explore-result-count">
+              Showing <strong id="explore-count">0</strong> places matching your filters
+            </div>
+            <div class="explore-actions-group">
+              <div class="view-mode-toggle">
+                <button type="button" class="view-mode-btn active" id="view-mode-split" title="Split View">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18"/><rect x="13" y="3" width="8" height="18"/></svg>
+                  Split
+                </button>
+                <button type="button" class="view-mode-btn" id="view-mode-grid" title="Grid Only">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Grid
+                </button>
+                <button type="button" class="view-mode-btn" id="view-mode-map" title="Map Only">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+                  Map
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Category Cover Banner (Education, Essential Services, etc.) -->
+          <div id="explore-category-cover-banner" style="display: none;"></div>
+
+          <!-- Split Content Container -->
+          <div class="split-content-wrap" id="split-content-wrap">
+            <div class="places-subgrid" id="explore-places-grid">
+              <!-- Rendered dynamically -->
+            </div>
+            <div class="map-sticky-container">
+              <div id="leaflet-map"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       VIEW: ASK LOCALS (COMMUNITY Q&A)
+       ======================================================================== -->
+  <main id="view-ask-locals" class="app-view" style="display: none;">
+    <div class="container section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2>Ask Locals – Real Answers from Real Residents</h2>
+          <p class="section-subtitle">Get authentic recommendations, local directions, and insider advice.</p>
+        </div>
+        <button class="btn btn-primary" onclick="App.openAskModal()">
+          + Ask a Question
+        </button>
+      </div>
+      <div class="qa-grid" id="qa-feed-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       VIEW: LOCAL GUIDES
+       ======================================================================== -->
+  <main id="view-guides" class="app-view" style="display: none;">
+    <div class="container section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2>Curated Local Guides & Trails</h2>
+          <p class="section-subtitle">Explore curated thematic food trails, cultural walks, and weekend itineraries.</p>
+        </div>
+      </div>
+      <div class="guides-grid" id="guides-feed-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       VIEW: EDUCATION PORTAL & COVER PAGE
+       ======================================================================== -->
+  <main id="view-education" class="app-view" style="display: none;">
+    <!-- Education Hero Cover Section -->
+    <section class="portal-cover-hero portal-cover-education">
+      <div class="container portal-cover-content">
+        <div class="portal-badge-pill education-glow">
+          <span class="pulse-dot green"></span> Verified Learning & Academic Directory
+        </div>
+        <h1 class="portal-cover-title">Premier Academic <span>& Learning Institutions</span></h1>
+        <p class="portal-cover-desc">
+          Verified directory of registered schools, autonomous colleges, research universities, coaching academies, technical training institutes, public libraries, and skill centers across Bengaluru, Hyderabad, Vijayawada, Rajahmundry, and Tanuku.
+        </p>
+
+        <!-- Quick Metrics Bar -->
+        <div class="portal-metrics-row">
+          <div class="portal-metric-chip"><strong>175</strong> Verified Learning Spots</div>
+          <div class="portal-metric-chip"><strong>7</strong> Academic Tiers</div>
+          <div class="portal-metric-chip"><strong>5</strong> Key Education Hubs</div>
+          <div class="portal-metric-chip"><strong>100%</strong> Physical Address & PIN Verified</div>
+        </div>
+
+        <!-- Education Quick Search Bar -->
+        <div class="portal-search-bar-wrap">
+          <div class="portal-search-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="education-search-input" placeholder="Search schools, IIT coaching, degree colleges, libraries..." onkeyup="if(event.key === 'Enter') App.loadEducationPlaces()">
+          </div>
+          <div class="portal-city-box">
+            <select id="education-city-select" onchange="App.loadEducationPlaces()">
+              <option value="All Cities">All Cities</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary" onclick="App.loadEducationPlaces()">Search Learning</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="container section" style="padding-top: 16px;">
+      <!-- Interactive Subcategory Tabs -->
+      <div class="portal-subcat-tabs" id="education-subcat-tabs">
+        <button type="button" class="portal-tab-btn active" data-sub="all" onclick="App.setEducationSubcategory('all')">
+          <span>✨</span> All Learning (175)
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="schools" onclick="App.setEducationSubcategory('schools')">
+          <span>🏫</span> Schools
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="colleges" onclick="App.setEducationSubcategory('colleges')">
+          <span>🏛️</span> Colleges
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="universities" onclick="App.setEducationSubcategory('universities')">
+          <span>🎓</span> Universities
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="coaching-centers" onclick="App.setEducationSubcategory('coaching-centers')">
+          <span>🎯</span> Coaching Centers
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="training-institutes" onclick="App.setEducationSubcategory('training-institutes')">
+          <span>💻</span> Training Institutes
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="libraries" onclick="App.setEducationSubcategory('libraries')">
+          <span>📚</span> Libraries
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="skill-centers" onclick="App.setEducationSubcategory('skill-centers')">
+          <span>⚙️</span> Skill Centers
+        </button>
+      </div>
+
+      <!-- Controls & Count -->
+      <div class="explore-controls-bar" style="margin-top: 18px; margin-bottom: 24px;">
+        <div class="explore-result-count">
+          Showing <strong id="education-count">0</strong> verified educational institutions
+        </div>
+      </div>
+
+      <!-- Cards Grid -->
+      <div class="places-grid" id="education-cards-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       VIEW: ESSENTIAL SERVICES PORTAL & COVER PAGE
+       ======================================================================== -->
+  <main id="view-essential" class="app-view" style="display: none;">
+    <!-- Essential Services Hero Cover Section -->
+    <section class="portal-cover-hero portal-cover-essential">
+      <div class="container portal-cover-content">
+        <div class="portal-badge-pill emergency-glow">
+          <span class="pulse-dot red"></span> 24/7 Emergency & Civic Infrastructure
+        </div>
+        <h1 class="portal-cover-title">Essential Public Services <span>& Helplines</span></h1>
+        <p class="portal-cover-desc">
+          Direct physical addresses, hotlines, and instant utility services for police stations, fire brigades, emergency trauma units, municipal headquarters, banking hubs, and public utilities across all 5 target cities.
+        </p>
+
+        <!-- Emergency Speed Dial Grid -->
+        <div class="emergency-speed-dial-grid">
+          <a href="tel:100" class="speed-dial-card">
+            <div class="speed-dial-icon">👮</div>
+            <div class="speed-dial-info">
+              <span class="speed-dial-title">Police</span>
+              <span class="speed-dial-num">100 / 112</span>
+            </div>
+          </a>
+          <a href="tel:101" class="speed-dial-card">
+            <div class="speed-dial-icon">🚒</div>
+            <div class="speed-dial-info">
+              <span class="speed-dial-title">Fire Brigade</span>
+              <span class="speed-dial-num">101</span>
+            </div>
+          </a>
+          <a href="tel:108" class="speed-dial-card highlight">
+            <div class="speed-dial-icon">🚑</div>
+            <div class="speed-dial-info">
+              <span class="speed-dial-title">EMRI Ambulance</span>
+              <span class="speed-dial-num">108</span>
+            </div>
+          </a>
+          <a href="tel:1091" class="speed-dial-card">
+            <div class="speed-dial-icon">🛡️</div>
+            <div class="speed-dial-info">
+              <span class="speed-dial-title">Women / DISHA</span>
+              <span class="speed-dial-num">1091</span>
+            </div>
+          </a>
+          <a href="tel:1098" class="speed-dial-card">
+            <div class="speed-dial-icon">👶</div>
+            <div class="speed-dial-info">
+              <span class="speed-dial-title">Childline</span>
+              <span class="speed-dial-num">1098</span>
+            </div>
+          </a>
+        </div>
+
+        <!-- Metrics Row -->
+        <div class="portal-metrics-row">
+          <div class="portal-metric-chip"><strong>275</strong> Verified Public Spots</div>
+          <div class="portal-metric-chip"><strong>11</strong> Civic Sub-Sectors</div>
+          <div class="portal-metric-chip"><strong>5</strong> Cities Covered</div>
+          <div class="portal-metric-chip"><strong>24/7</strong> Emergency Standby</div>
+        </div>
+
+        <!-- Essential Quick Search Bar -->
+        <div class="portal-search-bar-wrap">
+          <div class="portal-search-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="essential-search-input" placeholder="Search police stations, fire stations, electricity offices, banks..." onkeyup="if(event.key === 'Enter') App.loadEssentialServices()">
+          </div>
+          <div class="portal-city-box">
+            <select id="essential-city-select" onchange="App.loadEssentialServices()">
+              <option value="All Cities">All Cities</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-danger" onclick="App.loadEssentialServices()">Search Services</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="container section" style="padding-top: 16px;">
+      <!-- Interactive Subcategory Tabs -->
+      <div class="portal-subcat-tabs" id="essential-subcat-tabs">
+        <button type="button" class="portal-tab-btn active" data-sub="all" onclick="App.setEssentialSubcategory('all')">
+          <span>🚨</span> All Services (275)
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="police-stations" onclick="App.setEssentialSubcategory('police-stations')">
+          <span>👮</span> Police Stations
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="fire-stations" onclick="App.setEssentialSubcategory('fire-stations')">
+          <span>🚒</span> Fire Stations
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="emergency-services" onclick="App.setEssentialSubcategory('emergency-services')">
+          <span>🚑</span> Emergency Services
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="government-offices" onclick="App.setEssentialSubcategory('government-offices')">
+          <span>🏛️</span> Govt Offices
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="banks" onclick="App.setEssentialSubcategory('banks')">
+          <span>🏦</span> Banks
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="atms" onclick="App.setEssentialSubcategory('atms')">
+          <span>💳</span> ATMs
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="post-offices" onclick="App.setEssentialSubcategory('post-offices')">
+          <span>📮</span> Post Offices
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="electricity-services" onclick="App.setEssentialSubcategory('electricity-services')">
+          <span>⚡</span> Electricity
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="water-services" onclick="App.setEssentialSubcategory('water-services')">
+          <span>💧</span> Water
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="gas-services" onclick="App.setEssentialSubcategory('gas-services')">
+          <span>🔥</span> Gas
+        </button>
+        <button type="button" class="portal-tab-btn" data-sub="repair-services" onclick="App.setEssentialSubcategory('repair-services')">
+          <span>🔧</span> Repair
+        </button>
+      </div>
+
+      <!-- Quick Toggles Bar -->
+      <div class="explore-controls-bar" style="margin-top: 18px; margin-bottom: 24px;">
+        <div class="explore-result-count">
+          Showing <strong id="essential-count">0</strong> verified essential services
+        </div>
+        <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.88rem; cursor: pointer;">
+            <input type="checkbox" id="essential-open-now-check" onchange="App.loadEssentialServices()">
+            Open Now
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.88rem; cursor: pointer;">
+            <input type="checkbox" id="essential-24x7-check" onchange="App.loadEssentialServices()">
+            24/7 Available
+          </label>
+        </div>
+      </div>
+
+      <div class="places-grid" id="essential-cards-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       VIEW: SAVED ITEMS
+       ======================================================================== -->
+  <main id="view-saved" class="app-view" style="display: none;">
+    <div class="container section">
+      <div id="saved-items-container">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       VIEW: FOR BUSINESSES (OWNER DASHBOARD)
+       ======================================================================== -->
+  <main id="view-business" class="app-view" style="display: none;">
+    <div class="container section">
+      <div id="business-portal-container">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       VIEW: LOCAL CONTRIBUTOR PORTAL
+       ======================================================================== -->
+  <main id="view-contributor-portal" class="app-view" style="display: none;">
+    <div class="container section">
+      <div id="contributor-portal-container">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       VIEW: DEDICATED BUSINESS HUB LOGIN (MERCHANT ACCESS)
+       ======================================================================== -->
+  <main id="view-business-login" class="app-view" style="display: none;">
+    <div class="container section" style="max-width: 660px; margin: 30px auto 60px;">
+      <div class="business-login-box" style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); overflow: hidden;">
+        
+        <!-- Header Banner -->
+        <div style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: white; padding: 36px 32px 28px; text-align: center;">
+          <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38BDF8; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 4px 12px; border-radius: 9999px; margin-bottom: 12px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Dedicated Merchant Gateway
+          </div>
+          <h1 style="font-size: 1.85rem; font-weight: 800; color: white; margin-bottom: 6px;">TruSpot Business Hub</h1>
+          <p style="color: #94A3B8; font-size: 0.95rem; max-width: 480px; margin: 0 auto; line-height: 1.5;">
+            Verified portal for venue owners, authorized managers, and commercial operators across Andhra Pradesh & Karnataka.
+          </p>
+        </div>
+
+        <div style="padding: 32px;">
+          <!-- Quick Verified Merchant Demo Login -->
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-lg); padding: 18px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Instant Merchant Demo Sign In
+              </span>
+              <span class="badge" style="background: #DCFCE7; color: #15803D; font-size: 0.72rem; font-weight: 700;">Verified Credentials</span>
+            </div>
+            <button type="button" class="btn btn-outline" style="width: 100%; border-color: #86EFAC; background: white; color: #166534; font-weight: 700; justify-content: space-between; padding: 10px 14px; box-shadow: var(--shadow-sm);" onclick="Auth.fillDemoCredentials('business')">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.15rem;">🏢</span>
+                <span>Sign in as Verified Merchant</span>
+              </span>
+              <span style="font-family: monospace; font-size: 0.78rem; color: #15803D; background: #DCFCE7; padding: 2px 8px; border-radius: 6px;">business@demo.truspot.local</span>
+            </button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 12px; margin: 20px 0;">
+            <div style="flex: 1; height: 1px; background: var(--border);"></div>
+            <span style="font-size: 0.76rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Or sign in with registered business email</span>
+            <div style="flex: 1; height: 1px; background: var(--border);"></div>
+          </div>
+
+          <!-- Merchant Login Form -->
+          <form id="merchant-login-form">
+            <div class="form-group">
+              <label class="form-label" for="merchant-login-email">Merchant Email Address</label>
+              <input type="email" id="merchant-login-email" class="form-input" placeholder="owner@business.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="merchant-login-password">Password</label>
+              <input type="password" id="merchant-login-password" class="form-input" placeholder="••••••••" required>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-muted);">
+                <input type="checkbox" id="merchant-login-remember" checked> Keep merchant session active
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem; font-weight: 700; background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%);">
+              🔒 Authenticate & Access Business Hub
+            </button>
+          </form>
+
+          <!-- Privilege Notice -->
+          <div style="margin-top: 24px; padding: 14px; background: #F8FAFC; border: 1px solid var(--border); border-left: 3px solid #0EA5E9; border-radius: var(--radius-md); font-size: 0.82rem; color: #475569; line-height: 1.5;">
+            <strong>Merchant Role Validation:</strong> This portal is reserved for registered business owners. Accounts registered as Local Explorers or Contributors cannot log into Business Hub and will be redirected to the public portal.
+          </div>
+
+          <div style="margin-top: 20px; text-align: center;">
+            <a href="#explore" onclick="Router.navigate('explore')" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: underline;">
+              &larr; Return to Public Discovery Directory
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       FOOTER
+       ======================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <img src="assets/logo.jpg" alt="TruSpot Logo" style="width: 48px; height: 48px; border-radius: 12px; border: 1.5px solid #334155; object-fit: cover;">
+            <div>
+              <h3 style="margin-bottom: 0;">TruSpot</h3>
+              <span style="font-size: 0.72rem; color: #2DD4BF; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Real People, Real Places</span>
+            </div>
+          </div>
+          <p style="margin-bottom: 16px; line-height: 1.6;">A multi-city local discovery platform empowering residents and explorers to find verified spots, ask questions, and share honest experiences.</p>
+          <span class="badge badge-demo">Demo Mode Enabled</span>
+        </div>
+        <div class="footer-col">
+          <h4>Explore Cities</h4>
+          <ul class="footer-links">
+            <li><a href="#explore" onclick="Filters.setCity('Tanuku')">Tanuku, AP</a></li>
+            <li><a href="#explore" onclick="Filters.setCity('Rajahmundry')">Rajahmundry, AP</a></li>
+            <li><a href="#explore" onclick="Filters.setCity('Vijayawada')">Vijayawada, AP</a></li>
+            <li><a href="#explore" onclick="Filters.setCity('Hyderabad')">Hyderabad, TS</a></li>
+            <li><a href="#explore" onclick="Filters.setCity('Bengaluru')">Bengaluru, KA</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Categories</h4>
+          <ul class="footer-links">
+            <li><a href="#explore" onclick="Filters.setCategory('food-dining')">Food & Dining</a></li>
+            <li><a href="#explore" onclick="Filters.setCategory('travel-stay')">Travel & Stay</a></li>
+            <li><a href="#explore" onclick="Filters.setCategory('healthcare')">Healthcare</a></li>
+            <li><a href="#explore" onclick="Filters.setCategory('shopping')">Shopping</a></li>
+            <li><a href="#essential" onclick="Router.navigate('essential')">Essential Services</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Community & Roles</h4>
+          <ul class="footer-links">
+            <li><a href="#ask-locals" onclick="Router.navigate('ask-locals')">Ask Locals</a></li>
+            <li><a href="#guides" onclick="Router.navigate('guides')">Local Guides</a></li>
+            <li><a href="#contributor-portal" onclick="Router.navigate('contributor-portal')">Contributor Portal</a></li>
+            <li><a href="javascript:void(0)" onclick="Auth.fillDemoCredentials('explorer')">Demo Explorer Account</a></li>
+            <li><a href="javascript:void(0)" onclick="Auth.fillDemoCredentials('guide')">Demo Contributor Account</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Discreet Merchant Hub Access Link -->
+      <div class="footer-merchant-banner" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="font-size: 0.86rem; color: #94A3B8;">
+          Are you a verified merchant? 
+          <a href="/business/login" class="merchant-hub-link" onclick="event.preventDefault(); Router.navigate('business/login');" style="color: #38BDF8; font-weight: 600; text-decoration: underline; margin-left: 4px;">Sign in to Business Hub</a>
+        </div>
+        <div style="font-size: 0.76rem; color: #64748B;">
+          🔒 Secure Merchant Gateway &bull; Venue Claiming &bull; Review Response
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 TruSpot Local Discovery Platform. All rights reserved.</div>
+        <div style="display: flex; gap: 16px;">
+          <span>Privacy Policy</span>
+          <span>Terms of Use</span>
+          <span>OpenStreetMap &copy; Contributors</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================================================
+       MODAL: AUTHENTICATION (LOGIN & SIGN-UP)
+       ======================================================================== -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal-box auth-modal-card">
+      <button class="modal-close-btn" data-close-modal="auth-modal">&times;</button>
+      <div style="padding: 28px;">
+        <!-- Brand Logo Header in Auth Modal -->
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="assets/logo.jpg" alt="TruSpot Logo" style="width: 72px; height: 72px; border-radius: 18px; margin: 0 auto 10px; display: block; box-shadow: var(--shadow-md); border: 2px solid var(--border); object-fit: cover;">
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px;">TruSpot</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">Real People, Real Places</p>
+        </div>
+
+        <!-- One-Click Quick Demo Login Chips (Explorer & Contributor Only) -->
+        <div class="demo-chips-box">
+          <div class="demo-chips-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Choose Demo Role (Fills Credentials)
+          </div>
+          <div class="demo-chips-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <button type="button" class="demo-chip-btn" onclick="Auth.fillDemoCredentials('explorer')" style="padding: 12px 14px;">
+              <span style="font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">🚀 Local Explorer</span>
+              <span style="font-size: 0.75rem; color: #166534; font-family: monospace;">explorer@demo.truspot.local</span>
+            </button>
+            <button type="button" class="demo-chip-btn" onclick="Auth.fillDemoCredentials('guide')" style="padding: 12px 14px;">
+              <span style="font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">⭐ Local Contributor</span>
+              <span style="font-size: 0.75rem; color: #166534; font-family: monospace;">guide@demo.truspot.local</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Auth Tabs -->
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab-btn active" id="auth-tab-login">Log In</button>
+          <button type="button" class="auth-tab-btn" id="auth-tab-signup">Sign Up</button>
+        </div>
+
+        <!-- Log In Form -->
+        <div id="login-form-wrap">
+          <form id="login-form">
+            <div class="form-group">
+              <label class="form-label" for="login-email">Email or Username</label>
+              <input type="email" id="login-email" class="form-input" placeholder="you@domain.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="login-password">Password</label>
+              <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                <input type="checkbox" id="login-remember" checked> Remember Me
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Log In to TruSpot</button>
+          </form>
+        </div>
+
+        <!-- Sign Up Form -->
+        <div id="signup-form-wrap" style="display: none;">
+          <form id="signup-form">
+            <div class="form-group">
+              <label class="form-label" for="signup-name">Full Name</label>
+              <input type="text" id="signup-name" class="form-input" placeholder="Aarav Sharma" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="signup-email">Email Address</label>
+              <input type="email" id="signup-email" class="form-input" placeholder="aarav@example.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="signup-password">Password</label>
+              <input type="password" id="signup-password" class="form-input" placeholder="Create secure password" required minlength="6">
+              <div class="password-strength-bar">
+                <div class="password-strength-fill" id="password-strength-fill"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="signup-city">Home City</label>
+              <select id="signup-city" class="form-input">
+                <option value="Tanuku">Tanuku, AP</option>
+                <option value="Rajahmundry">Rajahmundry, AP</option>
+                <option value="Vijayawada">Vijayawada, AP</option>
+                <option value="Hyderabad">Hyderabad, TS</option>
+                <option value="Bengaluru">Bengaluru, KA</option>
+              </select>
+            </div>
+            <!-- Role Selection (Explorer or Contributor Only) -->
+            <div class="form-group">
+              <label class="form-label">Select Your Role</label>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); transition: all 0.2s ease;">
+                  <input type="radio" name="signup-role" value="explorer" checked>
+                  <div>
+                    <strong>Local Explorer</strong>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">Browse spots, save bookmarks, review venues, and ask community questions</div>
+                  </div>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); transition: all 0.2s ease;">
+                  <input type="radio" name="signup-role" value="guide">
+                  <div>
+                    <strong>Local Contributor (Guide)</strong>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">Submit local spots, curate guides, answer Q&A, and earn contributor badges</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Create Account</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: PLACE DETAILS VIEW
+       ======================================================================== -->
+  <div class="modal-overlay" id="place-details-modal">
+    <div class="modal-box">
+      <button class="modal-close-btn" data-close-modal="place-details-modal">&times;</button>
+      <div id="place-details-modal-body">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: ASK COMMUNITY QUESTION
+       ======================================================================== -->
+  <div class="modal-overlay" id="ask-modal">
+    <div class="modal-box" style="max-width: 580px;">
+      <button class="modal-close-btn" data-close-modal="ask-modal">&times;</button>
+      <div style="padding: 28px;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 6px;">Ask the Local Community</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Pose your question to verified local contributors and residents.</p>
+        <form onsubmit="App.submitQuestion(event)">
+          <div class="form-group">
+            <label class="form-label" for="ask-city-select">Select City</label>
+            <select id="ask-city-select" class="form-input"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ask-category-select">Category (Optional)</label>
+            <select id="ask-category-select" class="form-input"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ask-title-input">Question Title</label>
+            <input type="text" id="ask-title-input" class="form-input" placeholder="e.g. Best late night food spots open past 11 PM?" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ask-content-input">Details / Context</label>
+            <textarea id="ask-content-input" class="form-input" rows="4" placeholder="Mention budget, family preferences, or dietary requirements..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Question</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: GUIDE DETAILS
+       ======================================================================== -->
+  <div class="modal-overlay" id="guide-details-modal">
+    <div class="modal-box">
+      <button class="modal-close-btn" data-close-modal="guide-details-modal">&times;</button>
+      <div id="guide-details-modal-body">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: CONTRIBUTOR PROFILE
+       ======================================================================== -->
+  <div class="modal-overlay" id="contributor-modal">
+    <div class="modal-box" style="max-width: 560px;">
+      <button class="modal-close-btn" data-close-modal="contributor-modal">&times;</button>
+      <div id="contributor-modal-body" style="padding: 28px;">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: USER PROFILE
+       ======================================================================== -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal-box" style="max-width: 520px;">
+      <button class="modal-close-btn" data-close-modal="profile-modal">&times;</button>
+      <div id="profile-modal-body" style="padding: 28px;">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: ADD BUSINESS LISTING
+       ======================================================================== -->
+  <div class="modal-overlay" id="add-business-place-modal">
+    <div class="modal-box" style="max-width: 600px;">
+      <button class="modal-close-btn" data-close-modal="add-business-place-modal">&times;</button>
+      <div style="padding: 28px;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 6px;">Add New Business Listing</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Publish a new place on TruSpot with verified details.</p>
+        <form onsubmit="App.createBusinessListing(event)">
+          <div class="form-group">
+            <label class="form-label" for="biz-place-name">Business / Place Name</label>
+            <input type="text" id="biz-place-name" class="form-input" placeholder="e.g. Godavari Biryani Point" required>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label" for="biz-place-city">City</label>
+              <select id="biz-place-city" class="form-input"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="biz-place-category">Category</label>
+              <select id="biz-place-category" class="form-input"></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="biz-place-address">Full Address</label>
+            <input type="text" id="biz-place-address" class="form-input" placeholder="Street, landmark, pincode" required>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label" for="biz-place-phone">Contact Phone</label>
+              <input type="text" id="biz-place-phone" class="form-input" placeholder="+91 98765 43210">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="biz-place-price">Price Level</label>
+              <select id="biz-place-price" class="form-input">
+                <option value="₹">₹ (Budget)</option>
+                <option value="₹₹" selected>₹₹ (Mid-range)</option>
+                <option value="₹₹₹">₹₹₹ (Premium)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="biz-place-amenities">Amenities (Comma-separated)</label>
+            <input type="text" id="biz-place-amenities" class="form-input" placeholder="e.g. Wi-Fi, Parking, Dine-in, Family Friendly">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="biz-place-desc">Description</label>
+            <textarea id="biz-place-desc" class="form-input" rows="3" placeholder="Tell locals about your offerings..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Create & Publish Listing</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- Mobile Native Bottom Navigation Bar (Visible only on mobile devices) -->
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <button type="button" class="mobile-nav-item active" id="mob-nav-home" onclick="Router.navigate('home')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>Home</span>
+    </button>
+    <button type="button" class="mobile-nav-item" id="mob-nav-explore" onclick="Router.navigate('explore')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+      <span>Explore</span>
+    </button>
+    <button type="button" class="mobile-nav-item" id="mob-nav-saved" onclick="Router.navigate('saved')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+      <span>Saved</span>
+    </button>
+    <button type="button" class="mobile-nav-item" id="mob-nav-contribute" onclick="Router.navigate('contributor-portal')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      <span>Guide</span>
+    </button>
+    <button type="button" class="mobile-nav-item" id="mob-nav-profile" onclick="Auth.currentUser ? (Auth.currentUser.role === 'business' ? Router.navigate('business') : Auth.currentUser.role === 'contributor' ? Router.navigate('contributor-portal') : Router.navigate('explore')) : Auth.openAuthModal()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <span>Account</span>
+    </button>
+  </nav>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="js/auth.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/filters.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
