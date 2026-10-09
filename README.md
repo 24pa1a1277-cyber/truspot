@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # TRUSPOT – LOCAL DISCOVERY PLATFORM
 > **"Real People, Real Places."**
 
@@ -78,3 +79,7 @@ TruSpot is a modern, production-style multi-city local discovery platform helpin
    ```
    http://127.0.0.1:8000
    ```
+=======
+# truspot
+TruSpot – Real People, Real Places is a local discovery platform that helps people find trusted restaurants, shops, attractions, and services across cities. It connects users with authentic local experiences and personalized recommendations, making it easier to explore new places, discover hidden gems, and make confident decisions.
+>>>>>>> 86c7c8c1d96da2e77c5e3bf59d21f78869b3f874
