@@ -1,3 +1,4 @@
+const API_BASE = 'https://truspot-backend.onrender.com';
 // ==========================================================================
 // DYNAMIC SECTOR & SUBCATEGORY COVER IMAGE ASSET MAPPING (ALL 7 SECTORS)
 // High-resolution curated visual covers matching exact sector and subcategory
