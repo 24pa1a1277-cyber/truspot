@@ -844,7 +844,7 @@ const App = {
     const cityParam = city === 'All Cities' ? '' : `&city=${encodeURIComponent(city)}`;
     try {
       // 1. Trending / Highly Rated places
-      const res = await fetch(`/api/places?limit=6&sort_by=rating_desc${cityParam}`);
+      const res = await fetch(`https://truspot-backend.onrender.com/api/places?${queryParams.toString()}`);
       if (res.ok) {
         const data = await res.json();
         this.renderPlacesGrid(data.places, 'home-trending-grid');
