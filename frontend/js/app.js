@@ -1561,7 +1561,7 @@ const App = {
     }
 
     try {
-      const res = await fetch('/api/questions', {
+      const res = await fetch(`${API_BASE}/api/questions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, content, city_id: city_id !== 'All Cities' ? city_id : 1, category_id: category_id !== 'all' ? category_id : null })
