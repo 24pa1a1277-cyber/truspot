@@ -99,11 +99,12 @@ const Auth = {
 
   async login(email, password, remember = true, targetRoute = null) {
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, remember })
-      });
+      const res = await fetch('https://truspot-backend.onrender.com/api/auth/login', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password, remember })
+});
       const data = await res.json();
       if (res.ok) {
         this.currentUser = data.user;
@@ -175,11 +176,12 @@ const Auth = {
         formData.role = 'explorer';
       }
 
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      const res = await fetch('https://truspot-backend.onrender.com/api/auth/register', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(formData)
+});
       const data = await res.json();
       if (res.ok) {
         this.currentUser = data.user;
