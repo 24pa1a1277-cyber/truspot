@@ -443,8 +443,8 @@ const App = {
   async loadInitialMetadata() {
     try {
       const [citiesRes, catsRes] = await Promise.all([
-        fetch('/api/cities'),
-        fetch('/api/categories')
+        fetch(`${API_BASE}/api/cities`),
+        fetch(`${API_BASE}/api/categories`)
       ]);
 
       if (citiesRes.ok) this.cities = await citiesRes.json();
@@ -851,7 +851,7 @@ const App = {
       }
 
       // 2. Local Recommendations
-      const recRes = await fetch(`/api/places?limit=6&sort_by=reviews_desc${cityParam}`);
+      const recRes = await fetch(`${API_BASE}/api/places?limit=6&sort_by=reviews_desc${cityParam}`);
       if (recRes.ok) {
         const data = await recRes.json();
         this.renderPlacesGrid(data.places, 'home-recommendations-grid');
@@ -1111,7 +1111,7 @@ const App = {
     `;
 
     try {
-      const res = await fetch(`/api/places/${placeId}`);
+      const res = await fetch(`${API_BASE}/api/places/${placeId}`);
       if (!res.ok) throw new Error('Place not found');
 
       const place = await res.json();
@@ -1380,7 +1380,7 @@ const App = {
     }
 
     try {
-      const res = await fetch(`/api/places/${placeId}/reviews`, {
+      const res = await fetch(`${API_BASE}/api/places/${placeId}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rating: parseFloat(rating), comment })
@@ -1404,7 +1404,7 @@ const App = {
   async deleteReview(placeId, reviewId) {
     if (!confirm('Are you sure you want to remove your review?')) return;
     try {
-      const res = await fetch(`/api/places/${placeId}/reviews/${reviewId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/api/places/${placeId}/reviews/${reviewId}`, { method: 'DELETE' });
       if (res.ok) {
         window.showToast('Review deleted successfully', 'info');
         this.openPlaceDetails(placeId);
@@ -1417,7 +1417,7 @@ const App = {
 
   async upvoteReview(placeId, reviewId, button) {
     try {
-      const res = await fetch(`/api/places/${placeId}/reviews/${reviewId}/helpful`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/places/${placeId}/reviews/${reviewId}/helpful`, { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
         button.innerHTML = `👍 Helpful (${data.helpful_count})`;
@@ -1433,7 +1433,7 @@ const App = {
       return;
     }
     try {
-      const res = await fetch('/api/business/claim', {
+      const res = await fetch(`${API_BASE}/api/business/claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ place_id: placeId })
@@ -1459,7 +1459,7 @@ const App = {
 
     const cityParam = city === 'All Cities' ? '' : `city=${encodeURIComponent(city)}`;
     try {
-      const res = await fetch(`/api/questions?${cityParam}`);
+      const res = await fetch(`${API_BASE}/api/questions?${cityParam}`);
       if (!res.ok) return;
 
       let questions = await res.json();
@@ -1597,7 +1597,7 @@ const App = {
     }
 
     try {
-      const res = await fetch(`/api/questions/${questionId}/answers`, {
+      const res = await fetch(`${API_BASE}/api/questions/${questionId}/answers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content })
@@ -1616,7 +1616,7 @@ const App = {
 
   async upvoteAnswer(answerId, button) {
     try {
-      const res = await fetch(`/api/answers/${answerId}/helpful`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/answers/${answerId}/helpful`, { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
         button.innerHTML = `👍 Helpful (${data.helpful_count})`;
@@ -1634,7 +1634,7 @@ const App = {
 
     const cityParam = city === 'All Cities' ? '' : `city=${encodeURIComponent(city)}`;
     try {
-      const res = await fetch(`/api/guides?${cityParam}`);
+      const res = await fetch(`${API_BASE}/api/guides?${cityParam}`);
       if (!res.ok) return;
 
       let guides = await res.json();
@@ -1686,7 +1686,7 @@ const App = {
     content.innerHTML = '<div style="padding: 40px; text-align: center;">Loading curated collection...</div>';
 
     try {
-      const res = await fetch(`/api/guides/${guideId}`);
+      const res = await fetch(`${API_BASE}/api/guides/${guideId}`);
       const guide = await res.json();
 
       content.innerHTML = `
@@ -1743,7 +1743,7 @@ const App = {
 
   async likeGuide(guideId, button) {
     try {
-      const res = await fetch(`/api/guides/${guideId}/like`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/guides/${guideId}/like`, { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
         button.innerHTML = `❤️ ${data.likes_count}`;
@@ -1761,7 +1761,7 @@ const App = {
     content.innerHTML = '<div style="padding: 40px; text-align: center;">Loading contributor profile...</div>';
 
     try {
-      const res = await fetch(`/api/contributors/${userId}`);
+      const res = await fetch(`${API_BASE}/api/contributors/${userId}`);
       const data = await res.json();
       const u = data.user;
 
@@ -1838,7 +1838,7 @@ const App = {
     }
 
     try {
-      const res = await fetch(`/api/places?${params.toString()}`);
+      const res = await fetch(`${API_BASE}/api/places?${params.toString()}`);
       const data = await res.json();
       const places = data.places || [];
 
@@ -1961,7 +1961,7 @@ const App = {
     if (searchVal) params.set('q', searchVal);
 
     try {
-      const res = await fetch(`/api/places?${params.toString()}`);
+      const res = await fetch(`${API_BASE}/api/places?${params.toString()}`);
       const data = await res.json();
       const places = data.places || [];
 
@@ -2070,7 +2070,7 @@ const App = {
     }
 
     try {
-      const res = await fetch('/api/business/dashboard');
+      const res = await fetch(`${API_BASE}/api/business/dashboard`);
       const data = await res.json();
 
       container.innerHTML = `
@@ -2195,7 +2195,7 @@ const App = {
     }
 
     try {
-      const res = await fetch(`/api/business/reviews/${reviewId}/reply`, {
+      const res = await fetch(`${API_BASE}/api/business/reviews/${reviewId}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reply })
@@ -2233,7 +2233,7 @@ const App = {
     const cityObj = this.cities.find(c => c.name === city_id) || this.cities[0];
 
     try {
-      const res = await fetch('/api/business/places', {
+      const res = await fetch(`${API_BASE}/api/business/places`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2281,7 +2281,7 @@ const App = {
     }
 
     try {
-      const res = await fetch('/api/auth/saved');
+      const res = await fetch(`${API_BASE}/api/auth/saved`);
       const data = await res.json();
 
       container.innerHTML = `
