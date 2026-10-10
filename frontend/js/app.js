@@ -888,7 +888,7 @@ const App = {
     }
 
     try {
-      const res = await fetch(`/api/places?${queryParams.toString()}`);
+  const res = await fetch(`https://truspot-backend.onrender.com/api/places?${queryParams.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch places');
 
       const data = await res.json();
